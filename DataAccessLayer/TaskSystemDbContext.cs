@@ -1,5 +1,6 @@
 ﻿using DataAccessLayer.Entities;
 using Microsoft.EntityFrameworkCore;
+using Task = DataAccessLayer.Entities.Task;
 
 namespace DataAccessLayer;
 public class TaskSystemDbContext : DbContext
@@ -10,7 +11,7 @@ public class TaskSystemDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
-    public DbSet<Entities.Task> Tasks { get; set; }
+    public DbSet<Task> Tasks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
