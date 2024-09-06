@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Task = DataAccessLayer.Entities.Task;
 
-namespace DataAccessLayer;
+namespace DataAccessLayer.Data;
 public class TaskSystemDbContext : DbContext
 {
     public TaskSystemDbContext(DbContextOptions<TaskSystemDbContext> options) : base(options)
