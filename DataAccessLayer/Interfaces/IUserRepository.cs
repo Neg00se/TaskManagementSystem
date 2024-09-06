@@ -5,6 +5,6 @@ namespace DataAccessLayer.Interfaces;
 public interface IUserRepository
 {
 
-    public Task CreateUser(User user);
-    public Task<User> GetUser(string username);
+    Task CreateUserAsync(User user);
+    Task<User> GetUserAsync(string username);
 }

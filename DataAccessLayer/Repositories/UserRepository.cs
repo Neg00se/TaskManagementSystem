@@ -1,4 +1,5 @@
-﻿using DataAccessLayer.Entities;
+﻿using DataAccessLayer.Data;
+using DataAccessLayer.Entities;
 using DataAccessLayer.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Task = System.Threading.Tasks.Task;
@@ -13,16 +14,15 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task CreateUser(User user)
+    public async Task CreateUserAsync(User user)
     {
         if (user is not null)
         {
             await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
         }
     }
 
-    public async Task<User> GetUser(string username)
+    public async Task<User> GetUserAsync(string username)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
