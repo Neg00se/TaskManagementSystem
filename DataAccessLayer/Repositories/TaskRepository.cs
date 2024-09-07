@@ -45,6 +45,7 @@ public class TaskRepository : ITaskRepository
 
     public void Update(UserTask task)
     {
+        task.UpdatedAt = DateTime.UtcNow;
         _context.Tasks.Update(task);
     }
 }
