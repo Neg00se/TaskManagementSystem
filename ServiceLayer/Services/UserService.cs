@@ -53,7 +53,7 @@ public class UserService
 
             if (!isCorrectPassword)
             {
-                throw new Exception();
+                throw new IncorrectPasswordException("wrong password");
             }
 
             string token = CreateToken(user);
@@ -62,7 +62,7 @@ public class UserService
         }
         else
         {
-            throw new Exception();
+            throw new UserNotFoundException("user is not exist");
         }
     }
 
@@ -72,14 +72,14 @@ public class UserService
 
         if (user is not null)
         {
-            throw new Exception();
+            throw new EmailOrUsernameAlreadyExistException("User with this username already exist");
         }
 
         user = await _unitOfWork.UserRepository.GetUserAsync(email);
 
         if (user is not null)
         {
-            throw new Exception();
+            throw new EmailOrUsernameAlreadyExistException("user with this email already exist");
         }
     }
 
@@ -89,6 +89,7 @@ public class UserService
         {
             new Claim(ClaimTypes.Name,user.Username),
             new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
