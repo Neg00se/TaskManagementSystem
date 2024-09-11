@@ -1,5 +1,5 @@
 ﻿namespace ServiceLayer.Validation;
-internal class IncorrectPasswordException : Exception
+public class IncorrectPasswordException : Exception
 {
     public IncorrectPasswordException()
     {
