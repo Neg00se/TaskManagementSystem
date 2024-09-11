@@ -2,6 +2,7 @@
 using DataAccessLayer.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using ServiceLayer.Interfaces;
 using ServiceLayer.Models;
 using ServiceLayer.Validation;
 using System.IdentityModel.Tokens.Jwt;
@@ -12,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace ServiceLayer.Services;
 
-public class UserService
+public class UserService : IUserService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
@@ -42,7 +43,13 @@ public class UserService
         await _unitOfWork.SaveAsync();
     }
 
-
+    /// <summary>
+    /// Create jwt token for user login
+    /// </summary>
+    /// <param name="creds">user credentials</param>
+    /// <returns>jwt token</returns>
+    /// <exception cref="IncorrectPasswordException">when provided password doesnt match user password</exception>
+    /// <exception cref="UserNotFoundException">when user is not found</exception>
     public async Task<string> LoginAsync(UserLoginModel creds)
     {
         var user = await _unitOfWork.UserRepository.GetUserAsync(creds.Username);
