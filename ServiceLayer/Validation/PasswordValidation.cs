@@ -10,28 +10,28 @@ public static class PasswordValidation
         if (string.IsNullOrEmpty(password))
         {
 
-            throw new ArgumentNullException(nameof(password));
+            throw new ArgumentNullException(nameof(password), "password cant be empty");
         }
 
         if (password.Length < 5)
         {
-            throw new Exception();
+            throw new InvalidPasswordException("Password should be at least 5 characters long");
         }
         if (!Regex.IsMatch(password, @"[a-z]"))
         {
-            throw new Exception();
+            throw new InvalidPasswordException("Password should consist of latin letters");
         }
         if (!Regex.IsMatch(password, @"[A-Z]"))
         {
-            throw new Exception();
+            throw new InvalidPasswordException("Password should contain at least 1 uppercase letter");
         }
         if (!Regex.IsMatch(password, @"\d"))
         {
-            throw new Exception();
+            throw new InvalidPasswordException("Password should contain at least 1 digit");
         }
         if (!Regex.IsMatch(password, @"[^\w]"))
         {
-            throw new Exception();
+            throw new InvalidPasswordException("password should contain at least 1 symbol");
         }
     }
 
