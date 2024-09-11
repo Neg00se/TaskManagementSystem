@@ -14,5 +14,4 @@ public class TaskModel
 
     public StatusEnum Status { get; set; } = StatusEnum.Pending;
 
-    public Guid UserId { get; set; }
 }
