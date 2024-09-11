@@ -1,10 +1,11 @@
 ﻿using DataAccessLayer.Interfaces;
+using ServiceLayer.Interfaces;
 using ServiceLayer.Models;
 using ServiceLayer.Validation;
 using UserTask = DataAccessLayer.Entities.Task;
 
 namespace ServiceLayer.Services;
-public class TaskService
+public class TaskService : ITaskService
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -14,21 +15,70 @@ public class TaskService
     }
 
 
-    public async Task<List<UserTask>> GetUserTasksAsync(Guid userId)
+    /// <summary>
+    /// method for retrieving user task list
+    /// </summary>
+    /// <param name="userId">user identifier</param>
+    /// <param name="query">query model for filtering sorting and pagination</param>
+    /// <returns>list of user tasks</returns>
+    /// <exception cref="InvalidCastException">throws when id is not guid</exception>
+    public async Task<IEnumerable<UserTask>> GetUserTasksAsync(string userId, QueryModel query)
     {
         var tasks = await _unitOfWork.TaskRepository.GetAllTasksAsync();
-        var userTasks = tasks.Where(t => t.UserId == userId).ToList();
-        if (userTasks is null)
+
+        var isIdOk = Guid.TryParse(userId, out Guid userIdGuid);
+
+        IEnumerable<UserTask> userTasks = new List<UserTask>();
+
+        if (isIdOk)
         {
-            throw new TaskNotFoundException("task not found");
+            userTasks = tasks.Where(t => t.UserId == userIdGuid);
         }
-        return userTasks;
+        else
+        {
+            throw new InvalidCastException("invalid id");
+        }
+
+        if (query.Priority is not null)
+        {
+            userTasks = userTasks.Where(t => t.Priority == query.Priority);
+        }
+
+        if (query.Status is not null)
+        {
+            userTasks = userTasks.Where(t => t.Status == query.Status);
+        }
+
+        if (query.DueDate is not null)
+        {
+            userTasks = userTasks.Where(t => t.DueDate == query.DueDate);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.SortBy))
+        {
+            if (query.SortBy.Equals("DueDate", StringComparison.OrdinalIgnoreCase))
+            {
+                userTasks = query.IsDescending ? userTasks.OrderByDescending(t => t.DueDate) : userTasks.OrderBy(t => t.DueDate);
+            }
+
+            if (query.SortBy.Equals("Priority", StringComparison.OrdinalIgnoreCase))
+            {
+                userTasks = query.IsDescending ? userTasks.OrderByDescending(t => t.Priority) : userTasks.OrderBy(t => t.Priority);
+            }
+        }
+
+
+        var skipNumber = (query.PageNumber - 1) * query.PageSize;
+
+        return userTasks.Skip(skipNumber).Take(query.PageSize);
     }
 
-    public async Task<UserTask> GetUserTaskByIdAsync(Guid userId, Guid taskId)
+    public async Task<UserTask> GetUserTaskByIdAsync(string userId, string taskId)
     {
-        var task = await _unitOfWork.TaskRepository.GetByIdAsync(taskId);
-        if (task.UserId != userId)
+        Guid guidUserId = Guid.Parse(userId);
+
+        var task = await _unitOfWork.TaskRepository.GetByIdAsync(Guid.Parse(taskId));
+        if (task.UserId != guidUserId)
         {
             throw new UserMismatchException("user is not correct for provided task");
         }
@@ -41,16 +91,7 @@ public class TaskService
         return task;
     }
 
-    public async Task<List<UserTask>> SortAsync()
-    {
-        throw new NotImplementedException();
-    }
 
-    public async Task<List<UserTask>> GetByFilterAsync()
-    {
-        throw new NotImplementedException();
-
-    }
 
     public async Task AddTaskAsync(TaskModel model, string userId)
     {
@@ -60,7 +101,7 @@ public class TaskService
         task.Description = model.Description;
         task.Status = model.Status;
         task.Priority = model.Priority;
-        task.UserId = model.UserId;
+        task.UserId = Guid.Parse(userId);
         task.DueDate = model.DueDate;
 
         await _unitOfWork.TaskRepository.CreateTaskAsync(task);
@@ -69,16 +110,28 @@ public class TaskService
     }
 
 
-    public async Task UpdateUserTaskAsync(UserTask task)
+    public async Task UpdateUserTaskAsync(TaskModel task, string id)
     {
-        _unitOfWork.TaskRepository.Update(task);
+        var editTask = await _unitOfWork.TaskRepository.GetByIdAsync(Guid.Parse(id));
+        editTask.Title = task.Title;
+        editTask.DueDate = task.DueDate;
+        editTask.Description = task.Description;
+        editTask.Status = task.Status;
+        editTask.Priority = task.Priority;
+
+
+        _unitOfWork.TaskRepository.Update(editTask);
         await _unitOfWork.SaveAsync();
     }
 
 
-    public async Task DeleteUserTask(Guid taskId)
+    public async Task DeleteUserTask(string taskId)
     {
-        _unitOfWork.TaskRepository.Delete(taskId);
-        await _unitOfWork.SaveAsync();
+        bool isValidId = Guid.TryParse(taskId, out Guid id);
+        if (isValidId)
+        {
+            _unitOfWork.TaskRepository.Delete(id);
+            await _unitOfWork.SaveAsync();
+        }
     }
 }
